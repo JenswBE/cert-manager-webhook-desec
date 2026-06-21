@@ -10,6 +10,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"slices"
 	"strings"
 	"time"
 
@@ -55,7 +56,7 @@ type RRSet struct {
 type RRSets []RRSet
 
 // request builds and executes the raw HTTP request
-func (a *API) request(method, path string, body io.Reader, target interface{}) error {
+func (a *API) request(method, path string, body io.Reader, target any) error {
 	if path[0] != '/' {
 		path = "/" + path
 	}
@@ -151,11 +152,9 @@ func (a *API) AddRecord(subName, domainName, rtype, content string, ttl int) (RR
 	if len(rrsets) > 0 {
 		// RRSet exists, so see if we need to append a new record
 		rrset = rrsets[0]
-		for _, r := range rrset.Records {
-			if r == content {
-				// record already exists so just return
-				return rrsets, nil
-			}
+		if slices.Contains(rrset.Records, content) {
+			// record already exists so just return
+			return rrsets, nil
 		}
 		// record doesn't exists so append it
 		rrset.Records = append(rrset.Records, content)

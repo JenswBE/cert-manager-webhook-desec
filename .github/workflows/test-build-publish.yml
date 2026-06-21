@@ -1,0 +1,77 @@
+name: Test, build and publish
+on:
+  pull_request:
+  push:
+    branches: [main]
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v7
+
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          check-latest: true
+          go-version: "1.26"
+
+      - name: Pull common linter configs
+        run: wget -O .golangci.yml https://raw.githubusercontent.com/JenswBE/setup/main/programming_configs/golang/.golangci.yml
+
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v9
+        with:
+          version: latest
+
+      - name: Ensure all fixes are applied
+        run: |
+          go fix ./...
+          git diff --exit-code
+
+      - name: Run tests with mock server
+        run: make test
+
+      - name: Log in to the Container registry
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Derive Docker meta
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: "ghcr.io/${{ github.repository }}"
+          # Disable auto-latest; we control it explicitly below
+          flavor: |
+            latest=false
+          tags: |
+            # branch "main" -> "latest"
+            type=raw,value=latest,enable={{is_default_branch}}
+            # tag "vX.Y.Z" -> "stable", "vX.Y.Z", "vX", "vX.Y"
+            type=raw,value=stable,enable=${{ startsWith(github.ref, 'refs/tags/v') }}
+            type=semver,pattern={{raw}}
+            type=semver,pattern=v{{major}}
+            type=semver,pattern=v{{major}}.{{minor}}
+            # non-default branches -> "test-branch-<branch-name>"
+            type=ref,event=branch,prefix=test-branch-,enable={{is_not_default_branch}}
+            # pull requests -> "test-pr-<number>"
+            type=ref,event=pr,prefix=test-pr-
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v7
+        with:
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          platforms: linux/amd64,linux/arm64
