@@ -13,7 +13,7 @@ certManager:
   serviceAccountName: cert-manager
 
 image:
-  repository: ghcr.io/JenswBE/cert-manager-webhook-desec
+  repository: ghcr.io/jenswbe/cert-manager-webhook-desec
   tag: ""
   pullPolicy: IfNotPresent
 
