@@ -10,7 +10,7 @@ OUT := $(shell pwd)/_out
 # FIXME: Required to set the environment variables below. Remove when fixed.
 ENVTEST_K8S_VERSION=1.35.0
 
-HELM_FILES := $(shell find deploy/desec-webhook)
+HELM_FILES := $(shell find deploy/webhook-desec)
 
 # FIXME: The environment variables are required by the test helper in cert-manager, but not required to run the tests.
 test: setup-envtest
@@ -39,7 +39,7 @@ rendered-manifest.yaml: $(HELM_FILES) | $(OUT)
 	helm template \
 		--set image.repository=$(IMAGE_NAME) \
 		--set image.tag=$(IMAGE_TAG) \
-		deploy/desec-webhook > $(OUT)/rendered-manifest.yaml
+		deploy/webhook-desec > $(OUT)/rendered-manifest.yaml
 
 $(OUT):
 	mkdir -p "$(OUT)"

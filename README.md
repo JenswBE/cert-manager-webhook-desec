@@ -11,7 +11,7 @@ A Kubernetes cluster with cert-manager deployed. If you haven't already installe
 ### Using Helm
 
 ```bash
-helm install desec-webhook deploy/desec-webhook \
+helm install webhook-desec deploy/webhook-desec \
   --set groupName=acme.yourdomain.com
 ```
 
