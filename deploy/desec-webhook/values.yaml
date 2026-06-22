@@ -12,6 +12,8 @@ certManager:
   namespace: cert-manager
   serviceAccountName: cert-manager
 
+apiSecretName: desec-token
+
 image:
   repository: ghcr.io/jenswbe/cert-manager-webhook-desec
   tag: ""
