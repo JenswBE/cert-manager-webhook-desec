@@ -1,10 +1,16 @@
 name: Test, build and publish
 on:
   pull_request:
+    paths-ignore:
+      - "deploy/**"
+      - "examples/**"
   push:
     branches: [main]
     tags:
       - "v*.*.*"
+    paths-ignore:
+      - "deploy/**"
+      - "examples/**"
   workflow_dispatch:
 
 jobs:

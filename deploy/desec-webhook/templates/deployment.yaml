@@ -21,6 +21,10 @@ spec:
         release: {{ .Release.Name }}
     spec:
       serviceAccountName: {{ include "example-webhook.fullname" . }}
+      securityContext:
+        sysctls:
+          - name: "net.ipv4.ip_unprivileged_port_start"
+            value: "0"
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
@@ -49,6 +53,13 @@ spec:
             - name: certs
               mountPath: /tls
               readOnly: true
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            privileged: false
+            runAsNonRoot: true
           resources:
 {{ toYaml .Values.resources | indent 12 }}
       volumes:
